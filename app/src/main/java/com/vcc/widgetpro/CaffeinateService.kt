@@ -26,7 +26,6 @@ class CaffeinateService : Service() {
     }
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private var wakeLock: PowerManager.WakeLock? = null
-    private var lastAccessibilityPulseElapsed = 0L
 
     private val timeoutRunnable = Runnable {
         val state = stateStore.readState()
@@ -39,24 +38,6 @@ class CaffeinateService : Service() {
             stopCaffeinate()
         } else {
             scheduleTimeout(remainingMs)
-        }
-    }
-
-    private val accessibilityPulseRunnable = object : Runnable {
-        override fun run() {
-            val state = stateStore.readState()
-            if (!state.mode.isEnabled) return
-
-            if (AccessibilityFallbackHelper.isServiceEnabled(applicationContext)) {
-                val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-                if (powerManager.isInteractive) {
-                    if (CaffeinateAccessibilityService.requestPulse()) {
-                        lastAccessibilityPulseElapsed = SystemClock.elapsedRealtime()
-                    }
-                }
-            }
-
-            scheduleAccessibilityPulse()
         }
     }
 
@@ -80,7 +61,6 @@ class CaffeinateService : Service() {
 
     override fun onDestroy() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
-        timeoutHandler.removeCallbacks(accessibilityPulseRunnable)
         overlayController.hide()
         releaseWakeLock()
         super.onDestroy()
@@ -111,11 +91,9 @@ class CaffeinateService : Service() {
         startAsForeground(buildNotification(state.mode))
 
         timeoutHandler.removeCallbacks(timeoutRunnable)
-        timeoutHandler.removeCallbacks(accessibilityPulseRunnable)
         if (state.mode != CaffeinateMode.INFINITE && expiresAt != null) {
             scheduleTimeout(expiresAt - SystemClock.elapsedRealtime())
         }
-        scheduleAccessibilityPulse()
         syncOverlayVisibility()
 
         // A foreground service plus a CPU wakelock is the most realistic baseline for a
@@ -126,7 +104,6 @@ class CaffeinateService : Service() {
 
     private fun stopCaffeinate() {
         timeoutHandler.removeCallbacks(timeoutRunnable)
-        timeoutHandler.removeCallbacks(accessibilityPulseRunnable)
         overlayController.hide()
         stateStore.clear()
         releaseWakeLock()
@@ -166,19 +143,6 @@ class CaffeinateService : Service() {
 
     private fun scheduleTimeout(delayMs: Long) {
         timeoutHandler.postDelayed(timeoutRunnable, delayMs.coerceAtLeast(1_000L))
-    }
-
-    private fun scheduleAccessibilityPulse() {
-        if (!AccessibilityFallbackHelper.isServiceEnabled(applicationContext)) return
-
-        val now = SystemClock.elapsedRealtime()
-        val nextDelay = if (lastAccessibilityPulseElapsed == 0L) {
-            ACCESSIBILITY_PULSE_INTERVAL_MS
-        } else {
-            (ACCESSIBILITY_PULSE_INTERVAL_MS - (now - lastAccessibilityPulseElapsed))
-                .coerceAtLeast(5_000L)
-        }
-        timeoutHandler.postDelayed(accessibilityPulseRunnable, nextDelay)
     }
 
     private fun syncOverlayVisibility() {
@@ -291,7 +255,6 @@ class CaffeinateService : Service() {
         private const val REQUEST_CODE_BATTERY = 2002
         private const val ACTION_STOP = "com.vcc.widgetpro.action.STOP"
         private const val EXTRA_STOP = "extra_stop"
-        private const val ACCESSIBILITY_PULSE_INTERVAL_MS = 45_000L
 
         fun start(context: Context, mode: CaffeinateMode) {
             context.applicationContext.let { appContext ->

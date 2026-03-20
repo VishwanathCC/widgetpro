@@ -16,11 +16,9 @@ class MainActivity : AppCompatActivity() {
 
         val statusText = findViewById<TextView>(R.id.status_text)
         val detailText = findViewById<TextView>(R.id.detail_text)
-        val accessibilityText = findViewById<TextView>(R.id.accessibility_text)
         val overlayText = findViewById<TextView>(R.id.overlay_text)
         val cycleButton = findViewById<Button>(R.id.cycle_button)
         val batteryButton = findViewById<Button>(R.id.battery_button)
-        val accessibilityButton = findViewById<Button>(R.id.accessibility_button)
         val overlayToggleButton = findViewById<Button>(R.id.overlay_toggle_button)
         val overlayPermissionButton = findViewById<Button>(R.id.overlay_permission_button)
 
@@ -28,7 +26,6 @@ class MainActivity : AppCompatActivity() {
             val state = stateStore.readState()
             statusText.text = getString(R.string.main_status_format, state.mode.widgetLabel)
             detailText.text = ScreenAwakePolicy.GUARANTEE_SUMMARY
-            accessibilityText.text = AccessibilityFallbackHelper.describeAvailability(this)
             overlayText.text = buildOverlayStatus()
             overlayToggleButton.text = if (overlaySettingsStore.isOverlayFallbackEnabled()) {
                 getString(R.string.main_overlay_disable_button)
@@ -46,10 +43,6 @@ class MainActivity : AppCompatActivity() {
 
         batteryButton.setOnClickListener {
             BatteryOptimizationHelper.createIgnoreBatteryOptimizationsIntent(this)?.let(::startActivity)
-        }
-
-        accessibilityButton.setOnClickListener {
-            startActivity(AccessibilityFallbackHelper.createAccessibilitySettingsIntent())
         }
 
         overlayToggleButton.setOnClickListener {
@@ -74,13 +67,11 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         val statusText = findViewById<TextView>(R.id.status_text)
         val detailText = findViewById<TextView>(R.id.detail_text)
-        val accessibilityText = findViewById<TextView>(R.id.accessibility_text)
         val overlayText = findViewById<TextView>(R.id.overlay_text)
         val overlayToggleButton = findViewById<Button>(R.id.overlay_toggle_button)
         val state = stateStore.readState()
         statusText.text = getString(R.string.main_status_format, state.mode.widgetLabel)
         detailText.text = ScreenAwakePolicy.GUARANTEE_SUMMARY
-        accessibilityText.text = AccessibilityFallbackHelper.describeAvailability(this)
         overlayText.text = buildOverlayStatus()
         overlayToggleButton.text = if (overlaySettingsStore.isOverlayFallbackEnabled()) {
             getString(R.string.main_overlay_disable_button)

@@ -33,15 +33,6 @@
         android:textSize="14sp" />
 
     <TextView
-        android:id="@+id/accessibility_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:textColor="#D8C48C"
-        android:textSize="14sp" />
-
-    <TextView
         android:id="@+id/overlay_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -63,13 +54,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:text="@string/main_battery_button" />
-
-    <Button
-        android:id="@+id/accessibility_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/main_accessibility_button" />
 
     <Button
         android:id="@+id/overlay_toggle_button"
