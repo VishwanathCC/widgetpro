@@ -9,10 +9,14 @@
     <string name="notification_stop_action">Turn off</string>
     <string name="notification_battery_action">Battery settings</string>
     <string name="notification_limitations">Display-on behavior is best effort and may still be limited by Android or OEM firmware</string>
+    <string name="notification_overlay_enabled">overlay fallback requested</string>
     <string name="main_status_format">Current mode: %1$s</string>
     <string name="main_cycle_button">Cycle Mode</string>
     <string name="main_battery_button">Open Battery Settings</string>
     <string name="main_accessibility_button">Open Accessibility Settings</string>
+    <string name="main_overlay_enable_button">Enable Overlay Fallback</string>
+    <string name="main_overlay_disable_button">Disable Overlay Fallback</string>
+    <string name="main_overlay_permission_button">Open Overlay Permission</string>
     <string name="main_help">The widget and Quick Settings tile are still the primary controls. This screen exists so the app can launch normally and expose battery-optimization help.</string>
     <string name="accessibility_service_label">Caffeinate accessibility fallback</string>
     <string name="accessibility_service_description">Optional fallback that sends a subtle best-effort gesture during an active caffeinate session to reduce screen sleep in other apps.</string>
@@ -20,4 +24,7 @@
     <string name="accessibility_status_enabled">Accessibility fallback: enabled. Best effort only.</string>
     <string name="accessibility_status_needs_service">Accessibility is on, but this app fallback service is not enabled yet.</string>
     <string name="accessibility_status_disabled">Accessibility fallback: off. Enable it in system settings for the cross-app fallback path.</string>
+    <string name="overlay_status_enabled">Overlay fallback: enabled and permission granted. A tiny keep-screen-on overlay will appear during active sessions.</string>
+    <string name="overlay_status_needs_permission">Overlay fallback: enabled, but overlay permission is still missing.</string>
+    <string name="overlay_status_disabled">Overlay fallback: off. Enable it for the strongest public-API cross-app fallback.</string>
 </resources>
