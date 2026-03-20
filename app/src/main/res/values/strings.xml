@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Caffeinate Widget</string>
+    <string name="widget_title">Caffeinate</string>
+    <string name="widget_hint">Tap to cycle</string>
+</resources>
