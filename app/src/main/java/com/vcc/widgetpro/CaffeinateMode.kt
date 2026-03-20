@@ -1,23 +1,53 @@
 package com.vcc.widgetpro
 
 enum class CaffeinateMode(
-    val minutes: Int,
+    val minutes: Int?,
     val widgetLabel: String,
-    val screenLabel: String
+    val notificationLabel: String,
+    val tileSubtitle: String
 ) {
-    MIN_15(15, "15", "Awake for 15 minutes"),
-    MIN_30(30, "30", "Awake for 30 minutes"),
-    MIN_60(60, "60", "Awake for 60 minutes"),
-    INFINITE(-1, "Infinite", "Awake until turned off"),
-    OFF(0, "Off", "Screen awake is off")
-}
+    OFF(
+        minutes = null,
+        widgetLabel = "OFF",
+        notificationLabel = "Screen awake off",
+        tileSubtitle = "Off"
+    ),
+    MINUTES_15(
+        minutes = 15,
+        widgetLabel = "15m",
+        notificationLabel = "Keeping service active for 15 minutes",
+        tileSubtitle = "15 min"
+    ),
+    MINUTES_30(
+        minutes = 30,
+        widgetLabel = "30m",
+        notificationLabel = "Keeping service active for 30 minutes",
+        tileSubtitle = "30 min"
+    ),
+    MINUTES_60(
+        minutes = 60,
+        widgetLabel = "60m",
+        notificationLabel = "Keeping service active for 60 minutes",
+        tileSubtitle = "60 min"
+    ),
+    INFINITE(
+        minutes = null,
+        widgetLabel = "INF",
+        notificationLabel = "Keeping service active until turned off",
+        tileSubtitle = "Infinite"
+    );
 
-fun nextMode(current: CaffeinateMode): CaffeinateMode {
-    return when (current) {
-        CaffeinateMode.OFF -> CaffeinateMode.MIN_15
-        CaffeinateMode.MIN_15 -> CaffeinateMode.MIN_30
-        CaffeinateMode.MIN_30 -> CaffeinateMode.MIN_60
-        CaffeinateMode.MIN_60 -> CaffeinateMode.INFINITE
-        CaffeinateMode.INFINITE -> CaffeinateMode.OFF
+    val isEnabled: Boolean
+        get() = this != OFF
+
+    fun next(): CaffeinateMode {
+        val values = entries
+        return values[(ordinal + 1) % values.size]
+    }
+
+    companion object {
+        fun fromName(raw: String?): CaffeinateMode {
+            return entries.firstOrNull { it.name == raw } ?: OFF
+        }
     }
 }

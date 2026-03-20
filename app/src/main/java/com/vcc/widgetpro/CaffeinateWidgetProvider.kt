@@ -3,101 +3,56 @@ package com.vcc.widgetpro
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.widget.RemoteViews
 
 class CaffeinateWidgetProvider : AppWidgetProvider() {
-
-    companion object {
-        const val ACTION_TOGGLE = "com.vcc.widgetpro.ACTION_TOGGLE"
-        private const val PREFS_NAME = "widget_prefs"
-        private const val PREF_MODE = "mode"
-
-        fun currentMode(context: Context): CaffeinateMode {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            return readMode(prefs.getString(PREF_MODE, CaffeinateMode.OFF.name))
-        }
-
-        fun persistMode(context: Context, mode: CaffeinateMode) {
-            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .edit()
-                .putString(PREF_MODE, mode.name)
-                .apply()
-        }
-
-        fun refreshWidgets(context: Context) {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val componentName = ComponentName(context, CaffeinateWidgetProvider::class.java)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-            for (appWidgetId in appWidgetIds) {
-                CaffeinateWidgetProvider().updateWidget(context, appWidgetManager, appWidgetId)
-            }
-        }
-
-        private fun readMode(value: String?): CaffeinateMode {
-            return value
-                ?.let { runCatching { CaffeinateMode.valueOf(it) }.getOrNull() }
-                ?: CaffeinateMode.OFF
-        }
-    }
-
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateWidget(context, appWidgetManager, appWidgetId)
+        val state = CaffeinateStateStore(context).readState()
+        appWidgetIds.forEach { appWidgetId ->
+            appWidgetManager.updateAppWidget(appWidgetId, createViews(context, state))
         }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
+        if (intent.action != ACTION_CYCLE) return
 
-        if (intent.action != ACTION_TOGGLE) {
-            return
-        }
-
-        val currentMode = currentMode(context)
-        val newMode = nextMode(currentMode)
-        persistMode(context, newMode)
-
-        if (newMode == CaffeinateMode.OFF) {
-            context.startActivity(CaffeinateActivity.createStopIntent(context))
-        } else {
-            context.startActivity(CaffeinateActivity.createStartIntent(context, newMode))
-        }
-
-        refreshWidgets(context)
+        val newState = CaffeinateStateStore(context).cycleState()
+        CaffeinateSync.refreshWidgets(context)
+        CaffeinateCommands.applyState(context)
     }
 
-    private fun updateWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        val views = RemoteViews(context.packageName, R.layout.widget_caffeinate)
-        val mode = currentMode(context)
-
-        views.setTextViewText(R.id.widget_title, context.getString(R.string.widget_title))
-        views.setTextViewText(R.id.widget_mode, mode.widgetLabel)
-        views.setTextViewText(R.id.widget_hint, context.getString(R.string.widget_hint))
-
-        val toggleIntent = Intent(context, CaffeinateWidgetProvider::class.java).apply {
-            action = ACTION_TOGGLE
+    private fun createViews(context: Context, state: CaffeinateState): RemoteViews {
+        return RemoteViews(context.packageName, R.layout.widget_caffeinate).apply {
+            setTextViewText(R.id.widget_title, context.getString(R.string.widget_title))
+            setTextViewText(R.id.widget_mode, state.mode.widgetLabel)
+            setTextViewText(R.id.widget_hint, context.getString(R.string.widget_hint))
+            setInt(
+                R.id.widget_root,
+                "setBackgroundColor",
+                if (state.mode.isEnabled) 0xFF1E5631.toInt() else 0xFF202124.toInt()
+            )
+            setOnClickPendingIntent(R.id.widget_root, createTogglePendingIntent(context))
         }
-        val pendingIntent = PendingIntent.getBroadcast(
+    }
+
+    private fun createTogglePendingIntent(context: Context): PendingIntent {
+        val intent = Intent(context, CaffeinateWidgetProvider::class.java).apply {
+            action = ACTION_CYCLE
+        }
+        return PendingIntent.getBroadcast(
             context,
-            0,
-            toggleIntent,
+            REQUEST_CODE_WIDGET,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or immutableFlag()
         )
-
-        views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
-        appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
     private fun immutableFlag(): Int {
@@ -106,5 +61,10 @@ class CaffeinateWidgetProvider : AppWidgetProvider() {
         } else {
             0
         }
+    }
+
+    companion object {
+        private const val ACTION_CYCLE = "com.vcc.widgetpro.action.CYCLE_FROM_WIDGET"
+        private const val REQUEST_CODE_WIDGET = 3001
     }
 }
