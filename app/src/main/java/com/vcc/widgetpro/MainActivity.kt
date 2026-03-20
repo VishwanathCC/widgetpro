@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         batteryButton.setOnClickListener {
-            BatteryOptimizationHelper.createIgnoreBatteryOptimizationsIntent(this)?.let(::startActivity)
+            startActivity(BatteryOptimizationHelper.createBatterySettingsIntent(this))
         }
 
         overlayToggleButton.setOnClickListener {

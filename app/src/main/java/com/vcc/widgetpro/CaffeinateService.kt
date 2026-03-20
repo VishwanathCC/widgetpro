@@ -167,15 +167,12 @@ class CaffeinateService : Service() {
             },
             PendingIntent.FLAG_UPDATE_CURRENT or immutableFlag()
         )
-        val batteryIntent = BatteryOptimizationHelper.createIgnoreBatteryOptimizationsIntent(this)
-        val batteryPendingIntent = batteryIntent?.let {
-            PendingIntent.getActivity(
-                this,
-                REQUEST_CODE_BATTERY,
-                it,
-                PendingIntent.FLAG_UPDATE_CURRENT or immutableFlag()
-            )
-        }
+        val batteryPendingIntent = PendingIntent.getActivity(
+            this,
+            REQUEST_CODE_BATTERY,
+            BatteryOptimizationHelper.createBatterySettingsIntent(this),
+            PendingIntent.FLAG_UPDATE_CURRENT or immutableFlag()
+        )
 
         val contentText = buildString {
             append(mode.notificationLabel)
@@ -203,15 +200,13 @@ class CaffeinateService : Service() {
                 )
             )
 
-        if (batteryPendingIntent != null) {
-            builder.addAction(
-                NotificationCompat.Action(
-                    0,
-                    getString(R.string.notification_battery_action),
-                    batteryPendingIntent
-                )
+        builder.addAction(
+            NotificationCompat.Action(
+                0,
+                getString(R.string.notification_battery_action),
+                batteryPendingIntent
             )
-        }
+        )
 
         return builder.build()
     }
